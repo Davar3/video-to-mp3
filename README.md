@@ -25,9 +25,10 @@ launcher for your system installs them for you.
 3. Done. Each video becomes a folder with the video and its `.mp3` inside.
 
 > **Works offline?** Yes — grab the **offline edition** from the
-> [Releases page](../../releases/latest); it already includes ffmpeg, so it needs
-> **no internet at all** (as long as Python is present). The plain source download
-> instead fetches ffmpeg on first run, which needs internet that one time.
+> [Releases page](../../releases/latest). It bundles **both Python and ffmpeg**, so it
+> needs **no internet and nothing installed** — even on a machine that has never had
+> Python. Just unzip and double-click. (The plain source download instead uses your
+> own Python and fetches ffmpeg on first run, which needs internet that one time.)
 
 ### Example
 
@@ -79,7 +80,8 @@ python convert_to_mp3.py --layout audio --quality speech
 
 ## ✅ Requirements
 
-- **Python 3.7+** — the launchers install it for you if it's missing.
+- **Python 3.7+** — used to run the script. The launchers install it if it's missing,
+  and the **Windows offline edition bundles its own Python** so nothing is needed.
 - **ffmpeg** — the tool finds it in this order: a **bundled copy** shipped next to
   the script (in a `bin/` folder — this is what the offline edition uses), then any
   system ffmpeg, then it downloads `imageio-ffmpeg` on first run (needs internet
@@ -89,8 +91,11 @@ python convert_to_mp3.py --layout audio --quality speech
 
 Drop an ffmpeg binary into a `bin/` folder next to `convert_to_mp3.py`
 (`bin/ffmpeg.exe` on Windows, `bin/ffmpeg` on macOS/Linux) and the tool will use it
-directly — no internet, no install. The prebuilt **offline edition** on the
-[Releases page](../../releases/latest) already has this set up for Windows.
+directly — no internet, no install. On Windows you can also drop the official
+[embeddable Python](https://www.python.org/downloads/windows/) into `bin/python/` and
+`convert-windows.bat` will use it when no system Python is found. The prebuilt
+**offline edition** on the [Releases page](../../releases/latest) already has both
+set up, so it runs with no Python and no internet at all.
 
 ## 📂 Supported video formats
 

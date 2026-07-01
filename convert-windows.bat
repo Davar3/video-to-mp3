@@ -24,6 +24,10 @@ if not defined PYCMD (
     if not errorlevel 1 set "PYCMD=python3"
 )
 
+REM Last resort: a Python bundled inside this folder (offline edition).
+REM Runs in place - nothing is installed and PATH is not changed.
+if not defined PYCMD if exist "%~dp0bin\python\python.exe" set "PYCMD="%~dp0bin\python\python.exe""
+
 if not defined PYCMD goto NOPYTHON
 
 REM --- Run the converter. ffmpeg is used from the bundled 'bin' folder if present. ---

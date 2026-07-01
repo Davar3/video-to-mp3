@@ -17,3 +17,7 @@ desktop.ini
 
 # Conversion leftovers
 *.mp3.part
+
+# Bundled binaries live in release ZIPs, not in the repo
+/bin/
+*.exe
