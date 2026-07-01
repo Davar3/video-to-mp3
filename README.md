@@ -24,8 +24,10 @@ launcher for your system installs them for you.
 
 3. Done. Each video becomes a folder with the video and its `.mp3` inside.
 
-> **First run needs internet** (once) to fetch the conversion engine (ffmpeg)
-> and, if necessary, Python. After that it works offline.
+> **Works offline?** Yes — grab the **offline edition** from the
+> [Releases page](../../releases/latest); it already includes ffmpeg, so it needs
+> **no internet at all** (as long as Python is present). The plain source download
+> instead fetches ffmpeg on first run, which needs internet that one time.
 
 ### Example
 
@@ -78,9 +80,17 @@ python convert_to_mp3.py --layout audio --quality speech
 ## ✅ Requirements
 
 - **Python 3.7+** — the launchers install it for you if it's missing.
-- **ffmpeg** — found automatically, or fetched via the `imageio-ffmpeg` package
-  on first run (needs internet once). On Linux the launcher installs the system
-  `ffmpeg` package instead.
+- **ffmpeg** — the tool finds it in this order: a **bundled copy** shipped next to
+  the script (in a `bin/` folder — this is what the offline edition uses), then any
+  system ffmpeg, then it downloads `imageio-ffmpeg` on first run (needs internet
+  once). On Linux the launcher installs the system `ffmpeg` package instead.
+
+### Make any copy fully offline
+
+Drop an ffmpeg binary into a `bin/` folder next to `convert_to_mp3.py`
+(`bin/ffmpeg.exe` on Windows, `bin/ffmpeg` on macOS/Linux) and the tool will use it
+directly — no internet, no install. The prebuilt **offline edition** on the
+[Releases page](../../releases/latest) already has this set up for Windows.
 
 ## 📂 Supported video formats
 

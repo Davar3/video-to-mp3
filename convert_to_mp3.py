@@ -114,11 +114,60 @@ def _pip_install(package):
     return False
 
 
+def _bundled_ffmpeg_names():
+    """Binary name(s) to look for, depending on the operating system."""
+    if os.name == "nt":
+        return ["ffmpeg.exe"]
+    return ["ffmpeg"]
+
+
+def find_bundled_ffmpeg():
+    """
+    Look for an ffmpeg binary shipped ALONGSIDE this script, so the tool works
+    with zero internet on the very first run. Searches the script's own folder
+    and a few common subfolders. This is the preferred source.
+    """
+    here = Path(__file__).resolve().parent
+    for folder in (here / "bin", here / "ffmpeg", here / "vendor", here):
+        for name in _bundled_ffmpeg_names():
+            candidate = folder / name
+            if candidate.is_file():
+                if os.name != "nt":               # ensure it's executable on Unix
+                    try:
+                        mode = os.stat(candidate).st_mode
+                        os.chmod(candidate, mode | 0o111)
+                    except OSError:
+                        pass
+                return str(candidate)
+    return None
+
+
+def _has_internet(timeout=4):
+    """Best-effort connectivity check against a couple of reliable hosts."""
+    import socket
+    for host, port in (("pypi.org", 443), ("1.1.1.1", 443), ("8.8.8.8", 53)):
+        try:
+            sock = socket.create_connection((host, port), timeout=timeout)
+            sock.close()
+            return True
+        except OSError:
+            continue
+    return False
+
+
 def resolve_ffmpeg():
     """
-    Return a path to an ffmpeg executable, installing one if needed, or None.
-    Order: system ffmpeg on PATH -> installed imageio-ffmpeg -> auto-install it.
+    Return a path to an ffmpeg executable, or None (after printing guidance).
+    Order of preference:
+      1. a bundled binary shipped with the tool (works offline),
+      2. a system ffmpeg on PATH,
+      3. an already-installed imageio-ffmpeg,
+      4. downloading imageio-ffmpeg (needs internet; last resort).
     """
+    bundled = find_bundled_ffmpeg()
+    if bundled:
+        return bundled
+
     system = shutil.which("ffmpeg")
     if system:
         return system
@@ -127,23 +176,42 @@ def resolve_ffmpeg():
     if found:
         return found
 
-    print("ffmpeg was not found. Fetching a private copy (one-time, needs an")
-    print("internet connection)... this is normal the first time you run it.")
-    sys.stdout.flush()
-    if _pip_install("imageio-ffmpeg"):
-        found = _try_import_imageio_ffmpeg()
-        if found:
-            return found
+    # Nothing local -> we would have to download it. Be honest about that.
+    if not _has_internet():
+        print("")
+        print("The conversion engine (ffmpeg) is not set up yet, and there is no")
+        print("internet connection to download it.")
+        print("")
+        print("  >>  Please connect to the internet and run this again.  <<")
+        print("")
+        print("(It only needs internet this one time. After that it works offline.)")
+        print("Tip: the OFFLINE version of this tool already includes ffmpeg and")
+        print("     never needs internet.")
+        return None
 
+    print("Setting up the conversion engine (one-time download)...")
+    sys.stdout.flush()
+    for attempt in (1, 2):
+        if _pip_install("imageio-ffmpeg"):
+            found = _try_import_imageio_ffmpeg()
+            if found:
+                return found
+        if attempt == 1:
+            print("The download didn't complete - trying once more...")
+            sys.stdout.flush()
+
+    print(ffmpeg_unavailable_message())
     return None
 
 
 def ffmpeg_unavailable_message():
     return (
-        "\nCould not find or install ffmpeg automatically.\n"
+        "\nCould not set up ffmpeg (the conversion engine).\n"
         "Do ONE of the following, then run this again:\n"
-        "  1) Connect to the internet and re-run (it auto-downloads), or\n"
-        "  2) Install ffmpeg manually:\n"
+        "  1) Use the OFFLINE version of this tool, which already includes ffmpeg\n"
+        "     (it has a 'bin' folder with ffmpeg inside), or\n"
+        "  2) Connect to a different network (some block downloads) and re-run, or\n"
+        "  3) Install ffmpeg manually:\n"
         "       Windows : winget install Gyan.FFmpeg\n"
         "                 (or)  pip install imageio-ffmpeg\n"
         "       macOS   : brew install ffmpeg\n"
@@ -432,9 +500,8 @@ def main(argv=None):
     print("Layout : %s    Quality: %s" % (args.layout, args.quality))
     print("=" * 52)
 
-    ffmpeg = resolve_ffmpeg()
+    ffmpeg = resolve_ffmpeg()   # prints its own guidance if it can't be found
     if not ffmpeg:
-        print(ffmpeg_unavailable_message())
         pause(args.no_pause)
         return 1
 
