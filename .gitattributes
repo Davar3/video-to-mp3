@@ -1,0 +1,3 @@
+# Normalise line endings so each OS gets what it needs.
+* text=auto eol=lf
+*.bat text eol=crlf
